@@ -629,8 +629,9 @@ if ((c%50)==0){
 */      printf("time step: %d, dtddy: %f, q1=%f, q2=%f, p1 =%f, p2=%f, f.f.=%f, \
 Re=%f, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
         (p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2-2*r),Re,int(l1),int(l2));        
-        // store the average z-velocity at inlet/outlet, average pressure at inlet/outlet, friction factor, and the sample point defined above
-        FILE* fileqp=fopen("qp.txt","a");  
+/*         store the average z-velocity at inlet/outlet, average pressure at inlet/outlet, 
+                friction factor, and the sample point defined above
+*/     FILE* fileqp=fopen("qp.txt","a");  
        fprintf(fileqp,"%f %f %f %f %f %f\n",q1,q2,p1,p2,(p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2-2*r),
                testh[ly*lx/2+lx/2],L); 
        fclose(fileqp);   
