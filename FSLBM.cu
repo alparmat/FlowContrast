@@ -247,28 +247,33 @@ uzt2+=c3*(uvw[0].w+uvw[1].w+uvw[2].w+uvw[3].w+uvw[4].w+uvw[5].w);
 }
 
 // ***************************** get planes *******************************
-// switches the planes used for periodic boundary conditions        
-__global__ void switchXYplane(char *IO, long lx, long ly, long lz, long d1, float pin, float p2){
+// switches the planes used for periodic boundary conditions, subtracts the outlet pressure 
+__global__ void bcond(char *IO, long lx, long ly, long lz, long d1, float pin, float p2){
 // coordinate in the texture     
 int x = blockIdx.x * blockDim.x + threadIdx.x; 
 int y = blockIdx.y * blockDim.y + threadIdx.y; 
 int z = blockIdx.z * blockDim.z + threadIdx.z;
 // coordinate in linear memory
 int idx=int(x) + lx * int(y) + int(z) * lx * ly;
-// if coordinates are outside of the domain or are within the wall region return
+// if coordinates are outside of the domain or are within the wall region return       
  if (x >= lx || y >= ly || z >= lz || IO[idx]==125)  return;
 // build periodic regions
 // before inlet copy the same variables as before outlet and add a p-difference        
- float4 val=tex3D(vtexr,x,y,lz-2*d1+z); val.x-=p2;
+if (x >= lx || y >= ly || z >= lz || IO[idx]==125)  return;
+// build periodic regions
+// before inlet copy the same variables as before outlet and add a p-difference        
+ int sw=1;
  if ((z>=0) && (z<d1)){
-  val.x+=pin; 
- surf3Dwrite(val,surf,x * sizeof(float4),y,z); }
- 
+ float4 val=tex3D(vtexr,x,y,lz-2*d1+z); val.x-=p2;
+  val.x+=pin; val.x-=p2;
+ surf3Dwrite(val,surf,x * sizeof(float4),y,z); sw=0;} 
 // after outlet copy the same variables as after inlet and subtract p-difference
  if ((z<lz) && (z>=lz-d1)){
- float4 val=tex3D(vtexr,x,y,2*d1-lz+z); val.x-=pin; 
- surf3Dwrite(val,surf,x * sizeof(float4),y,z); }}
-
+ float4 val=tex3D(vtexr,x,y,2*d1-lz+z); val.x-=pin; val.x-=p2;
+ surf3Dwrite(val,surf,x * sizeof(float4),y,z); sw=0; }
+// subtract outlet pressure from additional points
+if (sw==1) {float4 val=tex3D(vtexr,x,y,z); val.x-=p2; surf3Dwrite(val,surf,x * sizeof(float4),y,z);}}
+       
 
 //shift the k-th plane from z direction to z+d1
 __global__ void shiftback(int lx, int ly, int lz, int d1, int k){
@@ -592,26 +597,22 @@ int main(void){
 //after a full update shift the results in their place        
   for (int k=0;k<(lz-d2);k++)  shiftback<<<grid2D,blocks2D>>>(lx,ly,lz,d2,k);
 //apply periodic boundary conditions
-  switchXYplane<<<grid3D,blocks3D>>>(IO,lx,ly,lz,d2,pin,p2);  p2=0;
-//output selected plane 
-// if ((c%10)==0){ p2=0.0f; getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz-d2-r,0);  
-//                 cudaMemcpy(testh1,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-//                for(int i=0;i<lx*ly;i++) p2+=testh1[i];  P2=0*p2/l2;}
-
+  bcond<<<grid3D,blocks3D>>>(IO,lx,ly,lz,d2,pin,p2);  p2=0;
+// 50 timestep cylcles output
 if ((c%50)==0){ 
     //initialize average velocity and pressure at the inlet and outlet
     q1=0.0f; q2=0.0f; p1=0.0f; p2=0.0f;  
 	// physical variables		        
         //get outlet quantitites of interest and sum them
-		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz-d2-r,3);  
+		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz-d2,3);  
         cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz-d2-r,0); 
+		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz-d2,0); 
         cudaMemcpy(testh1,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
  		for(int i=0;i<lx*ly;i++) {  {p2+=testh1[i];q2+=testh[i];}  }
         //get inlet quantitites of interest and sum them
-		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,d2+r,3);  
+		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,d2,3);  
         cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,d2+r,0); 
+		getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,d2,0); 
         cudaMemcpy(testh1,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
      	        for(int i=0;i<lx*ly;i++) {  {p1+=testh1[i];q1+=testh[i];}  }	   
         // calculate their average
@@ -628,11 +629,11 @@ if ((c%50)==0){
    above, Re, number of inlet cells and number of outlet cells
 */      printf("time step: %d, dtddy: %f, q1=%f, q2=%f, p1 =%f, p2=%f, f.f.=%f, \
 Re=%f, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
-        (p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2-2*r),Re,int(l1),int(l2));        
+        (p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2),Re,int(l1),int(l2));        
 /*         store the average z-velocity at inlet/outlet, average pressure at inlet/outlet, 
                 friction factor, and the sample point defined above
 */     FILE* fileqp=fopen("qp.txt","a");  
-       fprintf(fileqp,"%f %f %f %f %f %f\n",q1,q2,p1,p2,(p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2-2*r),
+       fprintf(fileqp,"%f %f %f %f %f %f\n",q1,q2,p1,p2,(p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2),
                testh[ly*lx/2+lx/2],L); 
        fclose(fileqp);   
         if ((c%500)==0) {
