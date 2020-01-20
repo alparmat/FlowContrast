@@ -1,2 +1,2 @@
 # FractionalStepLatticeBoltzmann
-CUDA source for fractional step lattice Boltzmann methods (simple Taylor-Green vortex example)
+CUDA source for fractional step lattice Boltzmann methods (simple periodic pipe example)
