@@ -5,7 +5,7 @@ This is a demo showing the initial idea (see documentation/paper file: MethodDoc
 
 Running the program:
 
-use MATLAB or Octave to execute pipe.m whihc generates the domain for the calculations.
+use MATLAB or Octave to execute pipe.m which generates the domain for the calculations.
 
 Build FSLBM.cu with nvcc into an executable
 
