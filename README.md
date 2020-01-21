@@ -10,7 +10,7 @@ Running the program:
   use the rest of the .m files to visualize the flow
   
 note:
-  If you run the demo with a changed domain size you will have to change also the size values in the .cu file
-  If you change the domain geometry you either need to implement new boundary conditions or change the periodic ones to fit
+  If you run the demo with a changed domain size you will have to change also the size values in the code (.m and .cu files)
+  If you change the domain geometry you either need to implement new boundary conditions or change the periodic ones to fit.
   
   next benchmark to follow: Taylor-Green vortex
