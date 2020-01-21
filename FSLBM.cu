@@ -14,7 +14,7 @@ texture < float4, cudaTextureType3D, cudaReadModeElementType >  vtexr;
 //nvcc FSLBM.cu -Xptxas -dlcm=cg -maxrregcount 64 -arch compute_61 -o pipe.exe
 // ****************************** compute kernel ***************************
 __global__ void 
-LBMcalc(char* __restrict__ IO, int lx, int ly, int lz, float dtddy, float pin,
+FSLBMcalc(char* __restrict__ IO, int lx, int ly, int lz, float dtddy, float pin,
         float nu,int shift,int k,float tblend, int d1,float m,float blend){
 //set up coordinates for usage with texture            
 int lxy = lx * ly; 
@@ -25,7 +25,7 @@ int y = ( blockIdx.y * blockDim.y + threadIdx.y);
 int z = k - int( threadIdx.z );
 // exit the kernel if the coordinates are specified outside the domain
 if (x >= lx || y >= ly || z >= lz || z<0 || y<0 || x<0 ) return;
-// get linear coordinate from texture coordinate (for usage with teh mask IO)
+// get linear coordinate from texture coordinate (for usage with the mask IO)
 int idx = int( x + lx * y + z * lxy ); 
 // thread adressing 
 int tx=threadIdx.x; int ty=threadIdx.y; int tz= blockDim.z - threadIdx.z - 1;
@@ -97,21 +97,17 @@ shu[tz][ty][tx]=val.y; shv[tz][ty][tx]=val.z; shw[tz][ty][tx]=val.w; }
 
 //shared memory block, finished
 txp=tx+1; typ=ty+1; tzp=tz+1; 
-// if the current thread points to a wall element, write rho,u,v,w into texture
-if (IO[idx]==125){ float4 val; val.x=0.0f; val.y=0.0f; val.z=0.0f; val.w=0.0f; 
-surf3Dwrite(val,surf,x * sizeof(float4),y,z+float(shift)); return;} 
-// if we the current thread is at a point outside of the domain, do nothing
-if (IO[idx]==1) return; // needed for periodic boundary conditions
-// finish thread-shared memory copy and other        
+// finish read-shared memory  thread interactions
 __syncthreads();
-
-//get pressure and velocity at for current thread
+// update only the fluid region (no wall, no padded inlet/outlet update in this kernel)
+if (IO[idx]==0){
+//get pressure and velocity for current thread
 float rhd1=shp[tzp][typ][txp]; 
 float u=shu[tzp][typ][txp]; float v=shv[tzp][typ][txp]; float w=shw[tzp][typ][txp];
-// perform predictive (lattice Boltzmann) step
+// perform predictive (lattice Boltzmann) step: d3q27 stencils are devided into 3 planes
 for (int i=8;i>=0;i--){
     // check wether the next point is in the wall or not, sw contains info
-   int id2=lx*int(cy[i])+int(cz[i])*lxy;      
+   int id2=lx*int(cy[i])+int(cz[i])*lxy;         
    sw= float(IO[idx+id2]<125); 
    // read pressure & u,v,w neighbors from shared memory 
    val.x=shp[tzp+cz[i]][typ+cy[i]][txp]*sw+rhd1*(1.0f-sw);    
@@ -121,11 +117,11 @@ for (int i=8;i>=0;i--){
    // start building parts of the equilibrium distribution function
    zet_u_RTinv=(float(cy[i])*val.z+float(cz[i])*val.w)*3.0f; 
    u_u_RTinv=(val.y*val.y+val.z*val.z+val.w*val.w)*3.0f;
-   // calculate equilibrium df. while x=0
+   // calculate equilibrium df. while x=0 (mid plane)
    rt1v=W[i]*(val.x+zet_u_RTinv+0.5f*(zet_u_RTinv*zet_u_RTinv-u_u_RTinv)); 
    // compute predicted pressure and velocities
    rt1+=rt1v; uyt1v+=rt1v*float(cy[i]); uzt1v+=rt1v*float(cz[i]);          
-   // same as above but for the z->z+1 direction
+   // same as above but for the x->x+1 direction
    sw= float(IO[idx+id2+1]<125);
    val.x=shp[tzp+cz[i]][typ+cy[i]][txp+1]*sw+rhd1*(1.0f-sw); 
    val.y=shu[tzp+cz[i]][typ+cy[i]][txp+1]; 
@@ -137,7 +133,7 @@ for (int i=8;i>=0;i--){
 // calculate equilibrium df. while x=+1
    rt1+=rt1v; uyt1v+=rt1v*float(cy[i]); uxt1v+=rt1v; uzt1v+=rt1v*float(cz[i]);
   
-   // same as above but for the z->z-1 direction
+   // same as above but for the x->x-1 direction
    sw= float(IO[idx+id2-1]<125);
    val.x=shp[tzp+cz[i]][typ+cy[i]][txp-1]*sw+rhd1*(1.0f-sw); 
    val.y=shu[tzp+cz[i]][typ+cy[i]][txp-1]; 
@@ -197,21 +193,26 @@ for (int i=8;i>=0;i--){
   float c7=0.0f; float c8=0.0f;
 */
 
-// order 6 <-> 4        
+// order 6 <-> 4      
+/*        
 float c0=-7.5f-0.66666666666f*blend; float c1=1.3333333f+0.16666666666f*blend; 
 float c2=-0.08333333f-0.0666666666666f*blend; float c3=0.01111111f*blend; 
 //float c4=0.0f; float c5=0.0f;   float c6=0.0f; float c7=0.0f; float c8=0.0f;
-        
+*/              
 // order 4 <-> 2        
-/*float c0=-6.0f-1.5f*blend;  float c1=1.0f+0.3333333333f*blend;  float c2=-0.0833333333f*blend;
-float c3=0.0f; float c4=0.0f; float c5=0.0f;  float c6=0.0f; float c7=0.0f;
-*/
+
+float c0=-6.0f-1.5f*blend;  float c1=1.0f+0.3333333333f*blend;  float c2=-0.0833333333f*blend;
+//float c3=0.0f; float c4=0.0f; float c5=0.0f;  float c6=0.0f; float c7=0.0f;
+
         
 //start with defining corrective stencil midpoints
 float uxt2=u*c0; float uyt2=v*c0; float uzt2=w*c0;
 
 float4 uvw[6];
-// build corrective step stencils up to order 6 (increasing order needs extension slower)
+/* build corrective step stencils up to order 6, increasing to higher 
+*  order needs code extension below (slower)
+*/
+// order 2        
 uvw[0]=tex3D(vtexr,x+d1,y,z); uvw[1]=tex3D(vtexr,x-d1,y,z); 
 uvw[2]=tex3D(vtexr,x,y+d1,z); uvw[3]=tex3D(vtexr,x,y-d1,z); 
 uvw[4]=tex3D(vtexr,x,y,z+d1); uvw[5]=tex3D(vtexr,x,y,z-d1); 
@@ -219,7 +220,7 @@ uvw[4]=tex3D(vtexr,x,y,z+d1); uvw[5]=tex3D(vtexr,x,y,z-d1);
 uxt2+=c1*(uvw[0].y+uvw[1].y+uvw[2].y+uvw[3].y+uvw[4].y+uvw[5].y);
 uyt2+=c1*(uvw[0].z+uvw[1].z+uvw[2].z+uvw[3].z+uvw[4].z+uvw[5].z);
 uzt2+=c1*(uvw[0].w+uvw[1].w+uvw[2].w+uvw[3].w+uvw[4].w+uvw[5].w);
-
+//order 4
 uvw[0]=tex3D(vtexr,x+2*d1,y,z); uvw[1]=tex3D(vtexr,x-2*d1,y,z);
 uvw[2]=tex3D(vtexr,x,y+2*d1,z); uvw[3]=tex3D(vtexr,x,y-2*d1,z);
 uvw[4]=tex3D(vtexr,x,y,z+2*d1); uvw[5]=tex3D(vtexr,x,y,z-2*d1);
@@ -227,7 +228,8 @@ uvw[4]=tex3D(vtexr,x,y,z+2*d1); uvw[5]=tex3D(vtexr,x,y,z-2*d1);
 uxt2+=c2*(uvw[0].y+uvw[1].y+uvw[2].y+uvw[3].y+uvw[4].y+uvw[5].y);
 uyt2+=c2*(uvw[0].z+uvw[1].z+uvw[2].z+uvw[3].z+uvw[4].z+uvw[5].z);
 uzt2+=c2*(uvw[0].w+uvw[1].w+uvw[2].w+uvw[3].w+uvw[4].w+uvw[5].w);
-
+//order 6 (3*d1 = coarse corrective stencil length)
+/*        
 uvw[0]=tex3D(vtexr,x+3*d1,y,z); uvw[1]=tex3D(vtexr,x-3*d1,y,z);
 uvw[2]=tex3D(vtexr,x,y+3*d1,z); uvw[3]=tex3D(vtexr,x,y-3*d1,z);
 uvw[4]=tex3D(vtexr,x,y,z+3*d1); uvw[5]=tex3D(vtexr,x,y,z-3*d1);
@@ -235,7 +237,7 @@ uvw[4]=tex3D(vtexr,x,y,z+3*d1); uvw[5]=tex3D(vtexr,x,y,z-3*d1);
 uxt2+=c3*(uvw[0].y+uvw[1].y+uvw[2].y+uvw[3].y+uvw[4].y+uvw[5].y);
 uyt2+=c3*(uvw[0].z+uvw[1].z+uvw[2].z+uvw[3].z+uvw[4].z+uvw[5].z);
 uzt2+=c3*(uvw[0].w+uvw[1].w+uvw[2].w+uvw[3].w+uvw[4].w+uvw[5].w);
-
+*/
 // perform corrective step
      float c=tblend; float cc=1.0-tblend;
        val.x=rt1;
@@ -244,7 +246,7 @@ uzt2+=c3*(uvw[0].w+uvw[1].w+uvw[2].w+uvw[3].w+uvw[4].w+uvw[5].w);
        val.w=(uzt1v+dtddy*uzt2*m)*c+w*cc;
 //  write new result as a surface
        surf3Dwrite(val,surf,x * sizeof(float4),y,z+float(shift)); 
-}
+}}
 
 // ***************************** get planes *******************************
 // switches the planes used for periodic boundary conditions, subtracts the outlet pressure 
@@ -255,17 +257,16 @@ int y = blockIdx.y * blockDim.y + threadIdx.y;
 int z = blockIdx.z * blockDim.z + threadIdx.z;
 // coordinate in linear memory
 int idx=int(x) + lx * int(y) + int(z) * lx * ly;
-// if coordinates are outside of the domain or are within the wall region return       
- if (x >= lx || y >= ly || z >= lz || IO[idx]==125)  return;
-// build periodic regions
-// before inlet copy the same variables as before outlet and add a p-difference        
-if (x >= lx || y >= ly || z >= lz || IO[idx]==125)  return;
+// return if coordinates are outside of the domain
+if (x >= lx || y >= ly || z >= lz)  return;
+// write 0 to all variables and return if wall 
+if (IO[idx]==125) {surf3Dwrite(float4{0.0f,0.0f,0.0f,0.0f},surf,x * sizeof(float4),y,z);return;}
 // build periodic regions
 // before inlet copy the same variables as before outlet and add a p-difference        
  int sw=1;
  if ((z>=0) && (z<d1)){
  float4 val=tex3D(vtexr,x,y,lz-2*d1+z); val.x-=p2;
-  val.x+=pin; val.x-=p2;
+  val.x+=pin; 
  surf3Dwrite(val,surf,x * sizeof(float4),y,z); sw=0;} 
 // after outlet copy the same variables as after inlet and subtract p-difference
  if ((z<lz) && (z>=lz-d1)){
@@ -592,12 +593,12 @@ int main(void){
   for (unsigned long c=1;c<cycle;c++){
 //scan through blocks of 8-XY planes and update by shifting the results 
   for ( k = (lz-1) - d2; k >= d2; k -= bdz){
-  LBMcalc<<< grid3D1, blocks3D1 >>>(IO, lx, ly, lz, dtddy, pin, nu, d2, k, 
+  FSLBMcalc<<< grid3D1, blocks3D1 >>>(IO, lx, ly, lz, dtddy, pin, nu, d2, k, 
           tblend, d1,1.0/float(d1*d1),blend); } // LBM kernel
 //after a full update shift the results in their place        
   for (int k=0;k<(lz-d2);k++)  shiftback<<<grid2D,blocks2D>>>(lx,ly,lz,d2,k);
 //apply periodic boundary conditions
-  bcond<<<grid3D,blocks3D>>>(IO,lx,ly,lz,d2,pin,p2);  p2=0;
+  bcond<<<grid3D,blocks3D>>>(IO,lx,ly,lz,d2,pin,p2);  p2=0.0f;
 // 50 timestep cylcles output
 if ((c%50)==0){ 
     //initialize average velocity and pressure at the inlet and outlet
