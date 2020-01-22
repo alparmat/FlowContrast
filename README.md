@@ -1,10 +1,7 @@
-#FlowContrast
-CUDA source for fractional step lattice Boltzmann methods
-This is a demo showing the initial idea (see documentation/paper file: MethodDoc_withFSLBMpaper.pdf):
-
+#FlowContrast contains the source files for CUDA-based fluid flow calculation with fractional step lattice Boltzmann methods. Initial idea:
 Sharpening/increasing of fluid flow contrast with reverse diffusion to capture turbulent structures
 
-
+This is a demo showing the fluid flow in a pipe (see documentation/paper file: MethodDoc_withFSLBMpaper.pdf).
 
 Running the program:
 
