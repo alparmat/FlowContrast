@@ -4,7 +4,7 @@
 %
 %  Input:  	                                                                                  
 %
-%  Output: Figure showing the z-velocity, pressure and, x-vortycity in the 
+%  Output: Figure showing the z-velocity, pressure and, x-vorticity in the 
 %          yz plane. The values are raw lattice (numerical) outputs and
 %          have to be scaled to the actual incompressible flow problem
 %
