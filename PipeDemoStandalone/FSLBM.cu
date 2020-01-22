@@ -423,17 +423,17 @@ printf("\n Velocity-pressure data has been read for continuing the calculations.
   // read averaged data
     float tmp;
  for (int k=0;k<ly*(lz);k++) {
-    fscanf(file,"%f\n",&tmp);  pav[k]=double(tmp)*double(cnt);
-    fscanf(file1,"%f\n",&tmp); uxav[k]=double(tmp)*double(cnt); 
-    fscanf(file2,"%f\n",&tmp); uyav[k]=double(tmp)*double(cnt);
-    fscanf(file3,"%f\n",&tmp); uzav[k]=double(tmp)*double(cnt);
-    fscanf(file4,"%f\n",&tmp); p2av[k]=double(tmp)*double(cnt2);
-    fscanf(file5,"%f\n",&tmp); ux2av[k]=double(tmp)*double(cnt2);
-    fscanf(file6,"%f\n",&tmp); uy2av[k]=double(tmp)*double(cnt2);
-    fscanf(file7,"%f\n",&tmp); uz2av[k]=double(tmp)*double(cnt2);
-    fscanf(file8,"%f\n",&tmp); uxyav[k]=double(tmp)*double(cnt2);
-    fscanf(file9,"%f\n",&tmp); uxzav[k]=double(tmp)*double(cnt2);
-    fscanf(file10,"%f\n",&tmp);uyzav[k]=double(tmp)*double(cnt2);  }
+    fscanf(file,"%e\n",&tmp);  pav[k]=double(tmp)*double(cnt);
+    fscanf(file1,"%e\n",&tmp); uxav[k]=double(tmp)*double(cnt); 
+    fscanf(file2,"%e\n",&tmp); uyav[k]=double(tmp)*double(cnt);
+    fscanf(file3,"%e\n",&tmp); uzav[k]=double(tmp)*double(cnt);
+    fscanf(file4,"%e\n",&tmp); p2av[k]=double(tmp)*double(cnt2);
+    fscanf(file5,"%e\n",&tmp); ux2av[k]=double(tmp)*double(cnt2);
+    fscanf(file6,"%e\n",&tmp); uy2av[k]=double(tmp)*double(cnt2);
+    fscanf(file7,"%e\n",&tmp); uz2av[k]=double(tmp)*double(cnt2);
+    fscanf(file8,"%e\n",&tmp); uxyav[k]=double(tmp)*double(cnt2);
+    fscanf(file9,"%e\n",&tmp); uxzav[k]=double(tmp)*double(cnt2);
+    fscanf(file10,"%e\n",&tmp);uyzav[k]=double(tmp)*double(cnt2);  }
 
 fclose(file);fclose(file1);fclose(file2);fclose(file3);fclose(file4);
 fclose(file5);fclose(file6);fclose(file7);fclose(file8);fclose(file9);
@@ -472,12 +472,12 @@ int main(void){
     FILE* file = fopen ("param.txt", "r");
 // the avlues below are numerical inputs to the lattice Boltzmann method
 // for computing their physical equivalent, rescaling is performed within the MATLAB scipts
-       fscanf(file,"%f\n",&tblend); // timestep = dx*tblend
-       fscanf(file,"%f\n",&pin);    // inlet pressure
-       fscanf(file,"%f\n",&nu);     // numerical viscosity       
+       fscanf(file,"%e\n",&tblend); // timestep = dx*tblend
+       fscanf(file,"%e\n",&pin);    // inlet pressure
+       fscanf(file,"%e\n",&nu);     // numerical viscosity       
        fscanf(file,"%d\n",&d1);     // coarse corrective stencil length   
        fscanf(file,"%d\n",&delta);  // type of averaging switch
-       fscanf(file,"%f\n",&blend);  // blend for the corrective discretization order
+       fscanf(file,"%e\n",&blend);  // blend for the corrective discretization order
        while (fgets(path, pathlen, file) != NULL); // path for saved files/backup       
                sprintf(path,"");
        fclose(file); 
@@ -579,9 +579,9 @@ int main(void){
   dim3 grid3D1(lx/bdx+1,ly/bdy+1,1);
    //initialize velocity and pressure (initphys) or read them from previous run (initphys1, initav)
    // initialize to [p,ux,uy,uz]=[0,0,0,0.0f]
-   initphys<<<grid3D,blocks3D>>>(pin,lx,ly,lz,d2);    
-//   initphys1(test, testh, lx, ly, lz, path); 
-//   initav(uxav,uyav,uzav,ux2av,uy2av,uz2av,pav,p2av,uxyav,uxzav,uyzav,cnt,cnt2,lx,ly,lz, path);
+//   initphys<<<grid3D,blocks3D>>>(pin,lx,ly,lz,d2);    
+   initphys1(test, testh, lx, ly, lz, path); 
+   initav(uxav,uyav,uzav,ux2av,uy2av,uz2av,pav,p2av,uxyav,uxzav,uyzav,cnt,cnt2,lx,ly,lz, path);
 
 //set utility vectors to 0
   set_v<<< lx*ly/64, 64 >>>(test, lx*ly);
@@ -628,23 +628,23 @@ if ((c%50)==0){
 /* output the timeste, the numerical viscosity, average z-velocity at inlet/outlet,
    average pressure at inlet/outlet, friction factor, the sample point defined 
    above, Re, number of inlet cells and number of outlet cells
-*/      printf("time step: %d, dtddy: %f, q1=%f, q2=%f, p1 =%f, p2=%f, f.f.=%f, \
-Re=%f, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
+*/      printf("time step: %d, dtddy: %e, q1=%e, q2=%e, p1 =%e, p2=%e, f.f.=%e, \
+Re=%e, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
         (p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2),Re,int(l1),int(l2));        
 /*         store the average z-velocity at inlet/outlet, average pressure at inlet/outlet, 
                 friction factor, and the sample point defined above
 */     FILE* fileqp=fopen("qp.txt","a");  
-       fprintf(fileqp,"%f %f %f %f %f %f\n",q1,q2,p1,p2,(p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2),
+       fprintf(fileqp,"%e %e %e %e %e %e\n",q1,q2,p1,p2,(p1-p2)/q1/q1/3.0f*4.0f*float(r)/float(lz-2*d2),
                testh[ly*lx/2+lx/2],L); 
        fclose(fileqp);   
         if ((c%500)==0) {
         // read the parameter file durin run if any changes are needed     
        file = fopen ("param.txt", "r"); 
-       fscanf(file,"%f\n",&tblend); 
-       fscanf(file,"%f\n",&pin); 
-       fscanf(file,"%f\n",&nu); 
+       fscanf(file,"%e\n",&tblend); 
+       fscanf(file,"%e\n",&pin); 
+       fscanf(file,"%e\n",&nu); 
        fscanf(file,"%d\n",&d1);
-       fscanf(file,"%d\n",&delta);  fscanf(file,"%f\n",&blend); //fscanf(file,"%s",path);
+       fscanf(file,"%d\n",&delta);  fscanf(file,"%e\n",&blend); //fscanf(file,"%s",path);
        while (fgets(path, pathlen, file) != NULL);   
        fclose(file);   
        dtddy=(nu-0.16666666f);      
@@ -712,28 +712,28 @@ Re=%f, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
        dd4[k]=uzav[k]/double(cnt)-double(yztmph[k]);}//turbulent z-velocity fluctuation
      // calculate correlations for RMS pressure and Reynolds stress tensor
       for (int k=0;k<ly*(lz);k++){
-       p2av[k]=p2av[k]+dd1[k]*dd1[k];
-       ux2av[k]=ux2av[k]+dd2[k]*dd2[k];          
-       uy2av[k]=uy2av[k]+dd3[k]*dd3[k];
-       uz2av[k]=uz2av[k]+dd4[k]*dd4[k];
+       p2av[k]=p2av[k]  +abs(dd1[k]);
+       ux2av[k]=ux2av[k]+abs(dd2[k]);
+       uy2av[k]=uy2av[k]+abs(dd3[k]);
+       uz2av[k]=uz2av[k]+abs(dd4[k]);
        uxyav[k]=uxyav[k]+dd2[k]*dd3[k]; 
        uxzav[k]=uxzav[k]+dd2[k]*dd4[k]; 
        uyzav[k]=uyzav[k]+dd4[k]*dd3[k];}
 
     free(dd1);free(dd2);free(dd3);free(dd4);
-    // wrirte correlations
+    // write correlations
     for (int k=0;k<ly*(lz);k++) {
-    fprintf(file,"%f\n",pav[k]/double(cnt));      // avg. p
-    fprintf(file1,"%f\n",uxav[k]/double(cnt));    // avg. ux
-    fprintf(file2,"%f\n",uyav[k]/double(cnt));    // avg. uy
-    fprintf(file3,"%f\n",uzav[k]/double(cnt));    // avg. uz
-    fprintf(file4,"%f\n",p2av[k]/double(cnt2));   // avg. (avg. p-p)^2 }
-    fprintf(file5,"%f\n",ux2av[k]/double(cnt2));  // avg. (avg. ux-ux)^2
-    fprintf(file6,"%f\n",uy2av[k]/double(cnt2));  // avg. (avg. uy-uy)^2
-    fprintf(file7,"%f\n",uz2av[k]/double(cnt2));  // avg. (avg. uz-uz)^2
-    fprintf(file8,"%f\n",uxyav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
-    fprintf(file9,"%f\n",uxzav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
-    fprintf(file10,"%f\n",uyzav[k]/double(cnt2));}// avg. (avg. uy-uy)(avg. uz-uz)
+    fprintf(file,"%e\n",pav[k]/double(cnt));      // avg. p
+    fprintf(file1,"%e\n",uxav[k]/double(cnt));    // avg. ux
+    fprintf(file2,"%e\n",uyav[k]/double(cnt));    // avg. uy
+    fprintf(file3,"%e\n",uzav[k]/double(cnt));    // avg. uz
+    fprintf(file4,"%e\n",p2av[k]/double(cnt2));   // avg. (avg. p-p)^2 }
+    fprintf(file5,"%e\n",ux2av[k]/double(cnt2));  // avg. (avg. ux-ux)^2
+    fprintf(file6,"%e\n",uy2av[k]/double(cnt2));  // avg. (avg. uy-uy)^2
+    fprintf(file7,"%e\n",uz2av[k]/double(cnt2));  // avg. (avg. uz-uz)^2
+    fprintf(file8,"%e\n",uxyav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
+    fprintf(file9,"%e\n",uxzav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
+    fprintf(file10,"%e\n",uyzav[k]/double(cnt2));}// avg. (avg. uy-uy)(avg. uz-uz)
     fprintf(file11,"%d %d\n",cnt,cnt2);
 
     fclose(file); fclose(file1); fclose(file2); fclose(file3); 
@@ -756,35 +756,35 @@ Re=%f, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
     // get and write YZ pressure at x=lx/2
 	getYZplane<<<grid3D,blocks3D>>>(yztmp,lx,ly,lz,lx/2,0); 
     cudaMemcpy(yztmph,yztmp, ly*(lz)*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*(lz);k++) fprintf(file,"%f\n",yztmph[k]);
+    for (int k=0;k<ly*(lz);k++) fprintf(file,"%e\n",yztmph[k]);
     // get and write YZ x-velocity at x=lx/2
 	getYZplane<<<grid3D,blocks3D>>>(yztmp,lx,ly,lz,lx/2,1); 
     cudaMemcpy(yztmph,yztmp, ly*(lz)*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*(lz);k++) fprintf(file1,"%f\n",yztmph[k]);
+    for (int k=0;k<ly*(lz);k++) fprintf(file1,"%e\n",yztmph[k]);
     // get and write YZ y-velocity at x=lx/2
 	getYZplane<<<grid3D,blocks3D>>>(yztmp,lx,ly,lz,lx/2,2); 
     cudaMemcpy(yztmph,yztmp, ly*(lz)*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*(lz);k++) fprintf(file2,"%f\n",yztmph[k]); 
+    for (int k=0;k<ly*(lz);k++) fprintf(file2,"%e\n",yztmph[k]); 
     // get and write YZ z-velocity at x=lx/2
 	getYZplane<<<grid3D,blocks3D>>>(yztmp,lx,ly,lz,lx/2,3); 
     cudaMemcpy(yztmph,yztmp, ly*(lz)*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*(lz);k++) fprintf(file3,"%f\n",yztmph[k]);  
+    for (int k=0;k<ly*(lz);k++) fprintf(file3,"%e\n",yztmph[k]);  
     // get and write XY x-velocity at z=lz/2
   	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz/2,1);  
     cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-    for (int k=0;k<ly*lx;k++) fprintf(file6,"%f\n",testh[k]); 
+    for (int k=0;k<ly*lx;k++) fprintf(file6,"%e\n",testh[k]); 
     // get and write XY y-velocity at z=lz/2
   	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz/2,2);  
     cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-    for (int k=0;k<ly*lx;k++) fprintf(file7,"%f\n",testh[k]);
+    for (int k=0;k<ly*lx;k++) fprintf(file7,"%e\n",testh[k]);
     // get and write XY z-velocity at z=lz/2
   	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz/2,3);  
     cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-    for (int k=0;k<ly*lx;k++) fprintf(file8,"%f\n",testh[k]);
+    for (int k=0;k<ly*lx;k++) fprintf(file8,"%e\n",testh[k]);
     // get and write XY pressure at z=lz/2
   	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,lz/2,0);  
     cudaMemcpy(testh,test, lx*ly*sizeof(float), cudaMemcpyDeviceToHost); 
-    for (int k=0;k<ly*lx;k++) fprintf(file9,"%f\n",testh[k]);
+    for (int k=0;k<ly*lx;k++) fprintf(file9,"%e\n",testh[k]);
     // get and write YZ mask at x=lx/2
 	getYZplaneIO<<<lx*ly*(lz)/128,128>>>(IO,IOt1,lx,ly,lz,lx/2); 
     cudaMemcpy(hIOt,IOt1, ly*(lz)*sizeof(char), cudaMemcpyDeviceToHost);  
@@ -821,11 +821,11 @@ if ((c%50000)==0) {
     //    y-velocity
 	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,i,2);  
     cudaMemcpy(testh,test, ly*lx*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*lx;k++) fwrite(&testh[k],sizeof(float),1,file2);// fprintf(file2,"%f ",xytmph[k]); 
+    for (int k=0;k<ly*lx;k++) fwrite(&testh[k],sizeof(float),1,file2);// fprintf(file2,"%e ",xytmph[k]); 
             
 	getXYplane<<<grid3D,blocks3D>>>(test,lx,ly,lz,i,3);  
     cudaMemcpy(testh,test, ly*lx*sizeof(float), cudaMemcpyDeviceToHost);  
-    for (int k=0;k<ly*lx;k++) fwrite(&testh[k],sizeof(float),1,file3);// fprintf(file3,"%f ",xytmph[k]);  
+    for (int k=0;k<ly*lx;k++) fwrite(&testh[k],sizeof(float),1,file3);// fprintf(file3,"%e ",xytmph[k]);  
 	}
 	fclose(file); fclose(file1); fclose(file2); fclose(file3);
 
@@ -857,17 +857,17 @@ if ((c%50000)==0) {
     FILE* file11 = fopen (strcat(path1,"_avii.txt"),"wt");                        
     // write the averaged fields and statistics
     for (int k=0;k<ly*(lz);k++) {
-    fprintf( file,"%f\n",pav[k]/double(cnt));      
-    fprintf(file1,"%f\n",uxav[k]/double(cnt)); 
-    fprintf(file2,"%f\n",uyav[k]/double(cnt)); 
-    fprintf(file3,"%f\n",uzav[k]/double(cnt));
-    fprintf(file4,"%f\n",p2av[k]/double(cnt2));   
-    fprintf(file5,"%f\n",ux2av[k]/double(cnt2)); 
-    fprintf(file6,"%f\n",uy2av[k]/double(cnt2)); 
-    fprintf(file7,"%f\n",uz2av[k]/double(cnt2));
-    fprintf(file8,"%f\n",uxyav[k]/double(cnt2)); 
-    fprintf(file9,"%f\n",uxzav[k]/double(cnt2));
-    fprintf(file10,"%f\n",uyzav[k]/double(cnt2));}
+    fprintf( file,"%e\n",pav[k]/double(cnt));      
+    fprintf(file1,"%e\n",uxav[k]/double(cnt)); 
+    fprintf(file2,"%e\n",uyav[k]/double(cnt)); 
+    fprintf(file3,"%e\n",uzav[k]/double(cnt));
+    fprintf(file4,"%e\n",p2av[k]/double(cnt2));   
+    fprintf(file5,"%e\n",ux2av[k]/double(cnt2)); 
+    fprintf(file6,"%e\n",uy2av[k]/double(cnt2)); 
+    fprintf(file7,"%e\n",uz2av[k]/double(cnt2));
+    fprintf(file8,"%e\n",uxyav[k]/double(cnt2)); 
+    fprintf(file9,"%e\n",uxzav[k]/double(cnt2));
+    fprintf(file10,"%e\n",uyzav[k]/double(cnt2));}
     // write the number of averaged timesteps for the fields and for the turbulence statistics
     fprintf(file11,"%d %d\n",cnt,cnt2);
 
