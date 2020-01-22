@@ -52,7 +52,7 @@ omega=uzy-uyz;omega(wall)=nan;
 pcolor((omega(:,1:end))); axis equal; shading interp; colormap(jet); colorbar; %caxis([-0.02 0.02])
 title('\omega_x vorticity (numerical)')
 subplot(2,2,4);  plot(p(r,:))
-title('p at x=r (numerical)')
+title('p at y=r (numerical)')
 % plot the z-direction velocity
 ax2=subplot(2,2,1); uz(wall)=nan; pcolor(-(uz(:,1:end))); axis equal; shading interp; colorbar
 title('velocity-z (numerical)')
