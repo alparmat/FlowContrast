@@ -1,3 +1,18 @@
+%% pipe: writes the domain for the pipe and the numerical variables
+%  Syntax:  type "pipe" in MATLAB or Octave after the the first
+%  output of the running simulation
+%
+%  Input:                                                         
+%
+%  Output: pipe.txt - text file that contains the domain
+%          param.txt - parameter file can be changed during the run
+%
+%  Example: 
+%
+%  See also: plotyzplane.m - visualize the flow field during the run 	                                                                                  
+%
+
+%%
 close all; clear all;
 % d is the wall region, l is the total lentgth, lx is the pipe diameter
 d=10; l=300+2*d; lx=100;
@@ -32,5 +47,3 @@ IO=uint8(IO); fid = fopen('pipe.txt', 'wt'); fprintf(fid, '%d\n', IO); fclose(fi
 fid = fopen('param.txt', 'wt'); 
 fprintf(fid, '%f\n%f\n%f\n%d\n%d\n', 1.0,0.003,40.06e-4,2,1,0.0); 
 fclose(fid)
-
-
