@@ -1,8 +1,9 @@
 %% avgFields: avg. velocity, pressure and vorticity in the mid longitudinal plane
 %  Syntax:  type "avgFields" in MATLAB or Octave after the the first
 %  output of the running simulation
-%                                                                                  
-%
+%                                                                                
+%  to enable this feature set delta=1 (line 5 in param.txt, after you have ran pipe.m)
+%  
 %  Output: Figure showing the average z-velocity, pressure and, x-vorticity
 %          in the yz plane. The values are raw lattice (numerical) outputs
 %          and have to be scaled to the actual incompressible flow problem
