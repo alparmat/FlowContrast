@@ -40,7 +40,7 @@ uz=uz(:,(d+1):(lz-d));
  p=p(:,(d+1):(lz-d)); 
 u=sqrt(ux.^2+uy.^2+uz.^2); 
 
-% shitch the wll region to (invisible) nan
+% shitch the wall region to (invisible) nan
 p(wall)=nan; u(wall)=nan;
 
 ax1=subplot(2,2,2);
