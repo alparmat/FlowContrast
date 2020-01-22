@@ -11,7 +11,8 @@
 %  Example: 	                                                                                  
 %
 %  See also: pipe.m - input for the simulation, FSLBM.cu - calculation source 	                                                                                  
-%
+%            avgFields.m -  visualize the averaged flow field during
+%            the run
 
 %%
 
