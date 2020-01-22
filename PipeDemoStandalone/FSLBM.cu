@@ -727,10 +727,10 @@ Re=%e, #inl. elements=%d, #outl. elements=%d\n",c,dtddy,q1,q2,p1,p2,\
     fprintf(file1,"%e\n",uxav[k]/double(cnt));    // avg. ux
     fprintf(file2,"%e\n",uyav[k]/double(cnt));    // avg. uy
     fprintf(file3,"%e\n",uzav[k]/double(cnt));    // avg. uz
-    fprintf(file4,"%e\n",p2av[k]/double(cnt2));   // avg. (avg. p-p)^2 }
-    fprintf(file5,"%e\n",ux2av[k]/double(cnt2));  // avg. (avg. ux-ux)^2
-    fprintf(file6,"%e\n",uy2av[k]/double(cnt2));  // avg. (avg. uy-uy)^2
-    fprintf(file7,"%e\n",uz2av[k]/double(cnt2));  // avg. (avg. uz-uz)^2
+    fprintf(file4,"%e\n",p2av[k]/double(cnt2));   // avg. |avg. p-p| }
+    fprintf(file5,"%e\n",ux2av[k]/double(cnt2));  // avg. |avg. ux-ux|^2
+    fprintf(file6,"%e\n",uy2av[k]/double(cnt2));  // avg. |avg. uy-uy|^2
+    fprintf(file7,"%e\n",uz2av[k]/double(cnt2));  // avg. |avg. uz-uz|^2
     fprintf(file8,"%e\n",uxyav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
     fprintf(file9,"%e\n",uxzav[k]/double(cnt2));  // avg. (avg. ux-ux)(avg. uz-uz)
     fprintf(file10,"%e\n",uyzav[k]/double(cnt2));}// avg. (avg. uy-uy)(avg. uz-uz)
