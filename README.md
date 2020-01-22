@@ -1,5 +1,5 @@
-#SharpFlow
-CUDA source for fractional step lattice Boltzmann methods i.e. by sharpening of fluid flow with reverse diffusion
+#FlowContrast
+CUDA source for fractional step lattice Boltzmann methods i.e. by sharpening/increasing of fluid flow contrast with reverse diffusion
 
 This is a demo showing the initial idea (see documentation/paper file: MethodDoc_withFSLBMpaper.pdf)
 
