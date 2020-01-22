@@ -1,13 +1,11 @@
 %% pipe: writes the domain for the pipe and the numerical variables
 %  Syntax:  type "pipe" in MATLAB or Octave after the the first
 %  output of the running simulation
-%
-%  Input:                                                         
+%                                                   
 %
 %  Output: pipe.txt - text file that contains the domain
 %          param.txt - parameter file can be changed during the run
 %
-%  Example: 
 %
 %  See also: plotyzplane.m - visualize the flow field during the run 	                                                                                  
 %
