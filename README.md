@@ -1,7 +1,10 @@
 #FlowContrast
-CUDA source for fractional step lattice Boltzmann methods i.e. by sharpening/increasing of fluid flow contrast with reverse diffusion
+CUDA source for fractional step lattice Boltzmann methods
+This is a demo showing the initial idea (see documentation/paper file: MethodDoc_withFSLBMpaper.pdf):
 
-This is a demo showing the initial idea (see documentation/paper file: MethodDoc_withFSLBMpaper.pdf)
+Sharpening/increasing of fluid flow contrast with reverse diffusion to capture turbulent structures
+
+
 
 Running the program:
 
