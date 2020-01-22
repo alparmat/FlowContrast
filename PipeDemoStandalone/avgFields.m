@@ -1,14 +1,12 @@
 %% avgFields: avg. velocity, pressure and vorticity in the mid longitudinal plane
 %  Syntax:  type "avgFields" in MATLAB or Octave after the the first
 %  output of the running simulation
-%
-%  Input:  	                                                                                  
+%                                                                                  
 %
 %  Output: Figure showing the average z-velocity, pressure and, x-vorticity
 %          in the yz plane. The values are raw lattice (numerical) outputs
 %          and have to be scaled to the actual incompressible flow problem
 %
-%  Example: 	                                                                                  
 %
 %  See also: plotyzplane.m - visualize the instantaneous flow field during
 %            the run
@@ -40,7 +38,7 @@ uz=uz(:,(d+1):(lz-d));
  p=p(:,(d+1):(lz-d)); 
 u=sqrt(ux.^2+uy.^2+uz.^2); 
 
-% shitch the wall region to (invisible) nan
+% switch the wall region to (invisible) nan
 p(wall)=nan; u(wall)=nan;
 
 ax1=subplot(2,2,2);
