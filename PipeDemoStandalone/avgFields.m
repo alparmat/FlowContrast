@@ -3,6 +3,7 @@
 %  output of the running simulation
 %                                                                                
 %  to enable this feature set delta=1 (line 5 in param.txt, after you have ran pipe.m)
+%  to reset the averaging feature set delta=0 (line 5 in param.txt: 0)
 %  
 %  Output: Figure showing the average z-velocity, pressure and, x-vorticity
 %          in the yz plane. The values are raw lattice (numerical) outputs
