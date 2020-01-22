@@ -5,9 +5,9 @@ This is a demo showing the fluid flow in a pipe (see documentation/paper file: M
 
 Running the program:
 
--  use MATLAB or Octave to execute pipe.m which generates the domain for the calculations.
+-  use MATLAB or Octave to execute pipe.m which generates the domain and input files for the calculations.
 
--  Build FSLBM.cu with nvcc into an executable
+-  Build FSLBM.cu with into an executable with your CUDA compiler
 
 -  run the executable
 
